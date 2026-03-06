@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4a90e2">
+<meta name="description" content="Create your own branching story - follow the main path or create custom branches">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Branching Story — Editable</title>
+
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+<!-- Replace ca-pub-XXXXXXXXXXXXXXXX with your actual AdSense publisher ID -->
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    padding: 40px;
+  }
+
+  .container {
+    background: white;
+    padding: 25px;
+    max-width: 700px;
+    margin: auto;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+
+  h2 { text-align: center; }
+
+  .branch-map {
+    display: flex;
+    gap: 4px;
+    margin: 20px 0;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 6px;
+    flex-wrap: wrap;
+  }
+
+  .level-indicator {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    border: 2px solid #ddd;
+  }
+
+  .level-base {
+    background: #e3f2fd;
+    border-color: #90caf9;
+    color: #1565c0;
+  }
+
+  .level-branch {
+    background: #fff3e0;
+    border-color: #ffb74d;
+    color: #e65100;
+  }
+
+  .level-upcoming {
+    background: white;
+    border-color: #ddd;
+    color: #999;
+  }
+
+  .map-legend {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 15px;
+    font-size: 13px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legend-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: 2px solid;
+  }
+
+  .story-box {
+    border: 1px solid #ccc;
+    padding: 15px;
+    min-height: 180px;
+    border-radius: 6px;
+    background: #fafafa;
+    margin-bottom: 15px;
+    white-space: pre-wrap;
+  }
+
+  textarea {
+    width: 100%;
+    height: 80px;
+    margin-bottom: 10px;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+
+  .info {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Branching Story</h2>
+
+  <div class="info" id="levelDisplay"></div>
+
+  <div class="map-legend">
+    <div class="legend-item">
+      <div class="legend-box level-base"></div>
+      <span>Main Story (Free)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-box level-branch"></div>
+      <span>Custom Branch (Paid)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-box level-upcoming"></div>
+      <span>Upcoming</span>
+    </div>
+  </div>
+
+  <div class="branch-map" id="branchMap"></div>
+
+  <!-- AdSense Display Ad (Optional - shows between map and story) -->
+  <div style="text-align: center; margin: 20px 0;">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="YYYYYYYYYY"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+
+  <div class="story-box" id="storyBox"></div>
+
+  <div class="info" id="costDisplay"></div>
+
+  <textarea id="userInput" placeholder="Write your branch paragraph..."></textarea>
+
+  <button onclick="continueFree()">Follow Main Story (Free — Watch Ad)</button>
+  <button onclick="branchStory()">Create Branch (Paid)</button>
+  
+  <div id="endButtons" style="display: none;">
+    <button onclick="downloadStory()">📥 Download Your Story</button>
+    <button onclick="startOver()">🔄 Start Over</button>
+  </div>
+
+</div>
+
+<script>
+
+let currentLevel = 0;
+let choices = {}; 
+// choices[level] = { type: "base" } OR { type: "branch", text: "..." }
+
+const levels = [];
+for (let i = 25; i >= 1; i--) {
+  levels.push((i / 100).toFixed(2));
+}
+
+const baseStory = [
+  "Sarah woke up and thought it would be another day.",
+  "She heard something outside her window.",
+  "A shadow moved across the yard.",
+  "The wind suddenly stopped.",
+  "A scream echoed in the distance.",
+  "She ran to the door.",
+  "The lights flickered.",
+  "Her phone lost signal.",
+  "Footsteps approached.",
+  "The door creaked open.",
+  "She saw glowing eyes.",
+  "A voice whispered her name.",
+  "The house began to shake.",
+  "Pictures fell from the walls.",
+  "The floor trembled beneath her.",
+  "A roar filled the air.",
+  "Something grabbed her arm.",
+  "She broke free.",
+  "She ran into the forest.",
+  "The trees seemed alive.",
+  "Branches closed behind her.",
+  "The sky turned red.",
+  "She saw a clearing.",
+  "A strange figure stood there.",
+  "Everything went silent."
+];
+
+function rebuildStory() {
+  const segments = [];
+
+  for (let i = 0; i < currentLevel; i++) {
+    if (choices[i]) {
+      if (choices[i].type === "branch") {
+        segments.push(choices[i].text);
+      } else {
+        segments.push(baseStory[i]);
+      }
+    }
+  }
+
+  document.getElementById("storyBox").innerText =
+    segments.join("\n\n");
+}
+
+function updateBranchMap() {
+  const mapContainer = document.getElementById("branchMap");
+  mapContainer.innerHTML = "";
+
+  for (let i = 0; i < 25; i++) {
+    const indicator = document.createElement("div");
+    indicator.className = "level-indicator";
+    indicator.innerText = 25 - i;
+
+    if (i < currentLevel) {
+      if (choices[i] && choices[i].type === "branch") {
+        indicator.classList.add("level-branch");
+      } else {
+        indicator.classList.add("level-base");
+      }
+    } else {
+      indicator.classList.add("level-upcoming");
+    }
+
+    mapContainer.appendChild(indicator);
+  }
+}
+
+function updateUI() {
+
+  if (currentLevel >= 25) {
+    document.getElementById("levelDisplay").innerText = "Story Complete! 🎉";
+    document.getElementById("costDisplay").innerText = "";
+    document.getElementById("userInput").style.display = "none";
+    
+    // Hide the main action buttons
+    document.querySelectorAll('button[onclick="continueFree()"], button[onclick="branchStory()"]').forEach(btn => {
+      btn.style.display = "none";
+    });
+    
+    // Show the end buttons
+    document.getElementById("endButtons").style.display = "block";
+  } else {
+    document.getElementById("levelDisplay").innerText =
+      "Level " + (currentLevel + 1) + " of 25";
+
+    document.getElementById("costDisplay").innerText =
+      "Branch Cost: $" + levels[currentLevel];
+
+    document.getElementById("userInput").style.display = "block";
+    
+    // Show the main action buttons
+    document.querySelectorAll('button[onclick="continueFree()"], button[onclick="branchStory()"]').forEach(btn => {
+      btn.style.display = "block";
+    });
+    
+    // Hide the end buttons
+    document.getElementById("endButtons").style.display = "none";
+  }
+
+  rebuildStory();
+  updateBranchMap();
+}
+
+function continueFree() {
+  if (currentLevel >= 25) return;
+
+  // Show ad modal
+  showAdModal();
+}
+
+function showAdModal() {
+  // Create modal overlay
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  `;
+  
+  // Create modal content
+  const content = document.createElement('div');
+  content.style.cssText = `
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+  `;
+  
+  content.innerHTML = `
+    <h3 style="margin-top: 0;">Watch this ad to continue</h3>
+    
+    <!-- AdSense In-Article Ad Unit -->
+    <ins class="adsbygoogle"
+         style="display:block; margin: 20px 0;"
+         data-ad-format="fluid"
+         data-ad-layout-key="-fb+5w+4e-db+86"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="ZZZZZZZZZZ"></ins>
+    
+    <p style="color: #666; font-size: 14px; margin: 20px 0;">
+      Ad will close in <span id="adTimer">5</span> seconds...
+    </p>
+    
+    <button id="closeAdBtn" style="
+      padding: 12px 30px;
+      font-size: 16px;
+      background: #ccc;
+      border: none;
+      border-radius: 5px;
+      cursor: not-allowed;
+      opacity: 0.6;
+    " disabled>Continue</button>
+  `;
+  
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  
+  // Load the ad
+  (adsbygoogle = window.adsbygoogle || []).push({});
+  
+  // Countdown timer
+  let timeLeft = 5;
+  const timerEl = document.getElementById('adTimer');
+  const closeBtn = document.getElementById('closeAdBtn');
+  
+  const countdown = setInterval(() => {
+    timeLeft--;
+    timerEl.innerText = timeLeft;
+    
+    if (timeLeft <= 0) {
+      clearInterval(countdown);
+      closeBtn.disabled = false;
+      closeBtn.style.background = '#4a90e2';
+      closeBtn.style.color = 'white';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.style.opacity = '1';
+      
+      closeBtn.onclick = () => {
+        document.body.removeChild(modal);
+        
+        // Continue with the story
+        choices[currentLevel] = { type: "base" };
+        currentLevel++;
+        updateUI();
+      };
+    }
+  }, 1000);
+}
+
+function branchStory() {
+  if (currentLevel >= 25) return;
+
+  const text = document.getElementById("userInput").value.trim();
+
+  if (!text) {
+    alert("Write something to create a branch.");
+    return;
+  }
+
+  alert("Processing payment of $" + levels[currentLevel]);
+
+  choices[currentLevel] = {
+    type: "branch",
+    text: text
+  };
+
+  document.getElementById("userInput").value = "";
+
+  currentLevel++;
+  updateUI();
+}
+
+function downloadStory() {
+  const storyText = document.getElementById("storyBox").innerText;
+  
+  const blob = new Blob([storyText], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'my-branching-story.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function startOver() {
+  if (confirm("Are you sure you want to start over? This will erase your current story.")) {
+    currentLevel = 0;
+    choices = {};
+    document.getElementById("userInput").value = "";
+    updateUI();
+  }
+}
+
+// initialize
+updateUI();
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => console.log('Service Worker registered'))
+      .catch(err => console.log('Service Worker registration failed'));
+  });
+}
+
+</script>
+
+</body>
+</html>

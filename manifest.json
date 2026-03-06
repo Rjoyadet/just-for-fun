@@ -1,0 +1,24 @@
+{
+  "name": "Branching Story Creator",
+  "short_name": "Story Branch",
+  "description": "Create your own branching story - follow the main path or create custom branches",
+  "start_url": "./level-story-branch-map.html",
+  "display": "standalone",
+  "background_color": "#f4f4f4",
+  "theme_color": "#4a90e2",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
